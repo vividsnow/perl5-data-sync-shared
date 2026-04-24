@@ -1,0 +1,14 @@
+Makefile
+Makefile.old
+MYMETA.*
+blib/
+pm_to_blib
+Shared.c
+Shared.o
+Shared.bs
+*.so
+*.bs
+*.o
+ppport.h
+MANIFEST.bak
+*.tar.gz

@@ -181,13 +181,16 @@ PRIMITIVES
         my $r = $bar->wait($timeout); # with timeout
 
     Returns: 1 = leader (last to arrive), 0 = non-leader, -1 = timeout. On
-    timeout, the barrier is broken (reset to 0 arrived, generation bumped)
-    and all other waiting parties are released.
+    timeout the barrier is permanently broken: "wait" returns -1 for the
+    timing-out party and all other waiters, and every subsequent "wait" also
+    returns -1 until "reset" is called. This matches POSIX
+    "pthread_barrier_t" broken semantics.
 
         my $gen = $bar->generation;    # how many times barrier has tripped
         my $n   = $bar->arrived;       # currently arrived count
         my $n   = $bar->parties;       # party count
-        $bar->reset;                   # force-reset barrier state
+        $bar->is_broken;               # true if timeout broke the barrier
+        $bar->reset;                   # clear broken state + bump generation
 
   Data::Sync::Shared::RWLock
    Constructors
@@ -298,6 +301,33 @@ PRIMITIVES
         my $n  = $obj->eventfd_consume;  # drain notification counter
 
     Notification is opt-in. Use with EV or other event loops.
+
+SEE ALSO
+    Data::Buffer::Shared - typed shared array
+
+    Data::HashMap::Shared - concurrent hash table
+
+    Data::Queue::Shared - FIFO queue
+
+    Data::PubSub::Shared - publish-subscribe ring
+
+    Data::ReqRep::Shared - request-reply
+
+    Data::Pool::Shared - fixed-size object pool
+
+    Data::Stack::Shared - LIFO stack
+
+    Data::Deque::Shared - double-ended queue
+
+    Data::Log::Shared - append-only log (WAL)
+
+    Data::Heap::Shared - priority queue
+
+    Data::Graph::Shared - directed weighted graph
+
+    Data::BitSet::Shared - shared bitset (lock-free per-bit ops)
+
+    Data::RingBuffer::Shared - fixed-size overwriting ring buffer
 
 AUTHOR
     vividsnow
