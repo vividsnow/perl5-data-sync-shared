@@ -52,6 +52,7 @@ xt/concurrent_open.t
 xt/cppcheck.t
 xt/crash_recovery.t
 xt/dead_reader_recovery.t
+xt/destroy_during_call.t
 xt/eg_runs.t
 xt/eintr.t
 xt/ev_eventfd.t
@@ -61,6 +62,7 @@ xt/fd_leak.t
 xt/fd_validation.t
 xt/guard_stress.t
 xt/invalid_args.t
+xt/kwalitee.t
 xt/lifecycle.t
 xt/manifest_vs_git.t
 xt/memfd_seal.t
