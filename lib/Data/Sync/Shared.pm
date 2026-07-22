@@ -22,35 +22,43 @@ XSLoader::load('Data::Sync::Shared', $VERSION);
 # Guard objects -- auto-release on scope exit
 
 package Data::Sync::Shared::RWLock::Guard {
+    our $VERSION = '0.07';   # indexable package: PAUSE needs a version here too
     sub DESTROY {
+        # Only the process that took the lock may release it: after fork the
+        # child inherits the guard object, and its global destruction would
+        # otherwise release a lock the PARENT still holds -- breaking mutual
+        # exclusion for every other process.
         my $self = shift;
-        $self->[0]->${\$self->[1]} if $self->[0];
+        $self->[0]->${\$self->[1]} if $self->[0] && $self->[2] == $$;
     }
 }
 
 sub Data::Sync::Shared::RWLock::rdlock_guard {
     my $self = shift;
     $self->rdlock(@_);
-    bless [$self, 'rdunlock'], 'Data::Sync::Shared::RWLock::Guard';
+    bless [$self, 'rdunlock', $$], 'Data::Sync::Shared::RWLock::Guard';
 }
 
 sub Data::Sync::Shared::RWLock::wrlock_guard {
     my $self = shift;
     $self->wrlock(@_);
-    bless [$self, 'wrunlock'], 'Data::Sync::Shared::RWLock::Guard';
+    bless [$self, 'wrunlock', $$], 'Data::Sync::Shared::RWLock::Guard';
 }
 
 package Data::Sync::Shared::Condvar::Guard {
+    our $VERSION = '0.07';   # indexable package: PAUSE needs a version here too
     sub DESTROY {
+        # Only the process that took the mutex may release it -- see the note
+        # on RWLock::Guard::DESTROY.
         my $self = shift;
-        $self->[0]->unlock if $self->[0];
+        $self->[0]->unlock if $self->[0] && $self->[1] == $$;
     }
 }
 
 sub Data::Sync::Shared::Condvar::lock_guard {
     my $self = shift;
     $self->lock;
-    bless [$self], 'Data::Sync::Shared::Condvar::Guard';
+    bless [$self, $$], 'Data::Sync::Shared::Condvar::Guard';
 }
 
 # Condvar wait_while -- loop until predicate returns false
@@ -88,13 +96,17 @@ sub Data::Sync::Shared::Semaphore::acquire_guard {
     } else {
         $self->acquire_n($n, $timeout // -1) or return undef;
     }
-    bless [$self, $n], 'Data::Sync::Shared::Semaphore::Guard';
+    bless [$self, $n, $$], 'Data::Sync::Shared::Semaphore::Guard';
 }
 
 package Data::Sync::Shared::Semaphore::Guard {
+    our $VERSION = '0.07';   # indexable package: PAUSE needs a version here too
     sub DESTROY {
+        # Only the process that took the permits may release them: a forked
+        # child's global destruction would otherwise release permits it never
+        # acquired, pushing the semaphore count above what is actually free.
         my $self = shift;
-        $self->[0]->release($self->[1]);
+        $self->[0]->release($self->[1]) if $self->[0] && $self->[2] == $$;
     }
 }
 

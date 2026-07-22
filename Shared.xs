@@ -19,7 +19,13 @@
  * mortal pins the referent only against refcount-driven destruction, not an
  * explicit DESTROY, so the local h would dangle.  Used only where magic
  * can actually intervene between EXTRACT_HANDLE and the first use of h. */
+/* The same Perl that can destroy the handle can also REPLACE the invocant
+ * ($obj = 42 from an overload handler mutates ST(0), because Perl passes
+ * aliases), so SvROK must be re-checked before SvRV -- otherwise SvRV would
+ * run on a non-reference. */
 #define REEXTRACT(sv) \
+    if (!SvROK(sv)) \
+        croak("Data::Sync::Shared object was replaced during the call"); \
     h = INT2PTR(SyncHandle*, SvIV(SvRV(sv))); \
     if (!h) croak("Data::Sync::Shared object destroyed during the call")
 
