@@ -59,6 +59,7 @@ xt/ev_eventfd.t
 xt/eventfd_anyevent.t
 xt/eventfd_fork.t
 xt/fd_leak.t
+xt/guard_fork.t
 xt/fd_validation.t
 xt/guard_stress.t
 xt/invalid_args.t
